@@ -13,10 +13,10 @@ type Action struct {
 		Full_name string
 		Owner     User
 	}
-	Sender  User
+	Sender       User
 	Pull_request PullRequest
-	Comment Comment
-	Action	string
+	Comment      Comment
+	Action       string
 }
 
 type PullRequest struct {
@@ -65,7 +65,6 @@ func HandleHook(req *http.Request) (int, string) {
 		return 500, "SERVER ERROR: " + err.Error()
 	}
 	fmt.Printf("json: %#v\n", body)
-	fmt.Printf("json: %#v\n", body.Repository)
 
 	return 200, "RECEIVED!"
 }

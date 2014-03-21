@@ -2,13 +2,14 @@ package main
 
 import (
 	"./github"
-	"./configure"
 
+	"fmt"
 	"github.com/codegangsta/martini"
 )
 
 func main() {
-	config := configure.Configure()
+	config := Configure()
+	fmt.Println(config)
 
 	m := martini.Classic()
 	m.Post("/github_action", github.HandleHook)
