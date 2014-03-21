@@ -8,14 +8,10 @@ import (
 )
 
 type Repo struct {
-	Name			string
+	Name            string
 	Approvers       []string
 	ApprovalsNeeded int
 }
-type RepoList struct {
-	Repos			[]Repo
-}
-
 
 // open the file and read the data into the Repo struct
 func FromJson(rl *[]Repo, filename string) error {
@@ -35,6 +31,7 @@ func FromJson(rl *[]Repo, filename string) error {
 	return nil
 }
 
+// gathers variables from the environment
 func GetEnvVariables() map[string]string {
 	envVars := make(map[string]string)
 
@@ -42,10 +39,10 @@ func GetEnvVariables() map[string]string {
 		split := strings.Split(varStr, "=")
 		envVars[split[0]] = split[1]
 	}
-
 	return envVars
 }
 
+// returns an array of Repo structs
 func Configure() []Repo {
 	configFile := GetEnvVariables()["config"]
 	if len(configFile) == 0 {

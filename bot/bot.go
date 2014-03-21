@@ -11,7 +11,7 @@ func main() {
 	config := configure.Configure()
 
 	m := martini.Classic()
-	m.Post("/github_action", github.HandleAction)
+	m.Post("/github_action", github.HandleHook)
 
 	m.Run()
 }
