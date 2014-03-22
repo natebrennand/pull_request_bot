@@ -1,6 +1,8 @@
 package github
 
 import (
+	"../configure"
+
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
@@ -18,14 +20,14 @@ type MergeRequestStruct struct {
 	CommitMessage string `json:"commit_message"`
 }
 
-func GithubAPICall(token, uri, method string, data []byte) ([]byte, error) {
+func GithubAPICall(uri, method string, data []byte) ([]byte, error) {
 	uri = "https://api.github.com" + uri
 	body := bytes.NewBuffer(data)
 	req, err := http.NewRequest(method, uri, body)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", "token "+token)
+	req.Header.Add("Authorization", "token "+configure.GlobalConfig.GithubToken)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -38,12 +40,12 @@ func GithubAPICall(token, uri, method string, data []byte) ([]byte, error) {
 	return respBody, nil
 }
 
-func MergePullRequest(token, owner, repo string, requestNumber int) error {
+func MergePullRequest(owner, repo string, requestNumber int) error {
 	uri := ("/repos/" + repo + "/pulls/" + strconv.Itoa(requestNumber) + "/merge")
 	bodyBytes, err := json.Marshal(MergeRequestStruct{"merge bot!"})
 	if err != nil {
 		return err
 	}
-	_, err = GithubAPICall(token, uri, "PUT", bodyBytes)
+	_, err = GithubAPICall(uri, "PUT", bodyBytes)
 	return err
 }

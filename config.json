@@ -1,9 +1,12 @@
-[ 
-  {
-    "Name": "natebrennand/hook_testing_repo",
-    "Approvers": [
-      "natebrennand"
-    ],
-    "ApprovalsNeeded": 1
-  }
-]
+{ 
+  "GithubToken": "XXXXX",
+  "Repos": [
+    {
+      "Name": "natebrennand/hook_testing_repo",
+      "Approvers": [
+        "natebrennand"
+      ],
+      "ApprovalsNeeded": 1
+    }
+  ]
+}

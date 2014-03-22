@@ -23,18 +23,8 @@ type Action struct {
 		Title  string `json:"title"`
 	}
 	Sender      User
-	PullRequest PullRequest `json:"pull_request"`
 	Comment     Comment     `json:"comment"`
 	Action      string      `json:"action"`
-}
-
-type PullRequest struct {
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	HtmlUrl   string `json:"html_url"`
-	Merged    bool   `json:"merged"`
-	Mergeable bool   `json:"mergeable"`
-	Comments  int    `json:"comments"`
 }
 
 type Comment struct {
@@ -61,7 +51,9 @@ func (c Comment) RequestApproved(approvers []string) bool {
 	return false
 }
 
-func CheckIssue(owner, repo string, comments []Comment, config []configure.Repo) bool {
+// given a set of comments, determine if the request is ready to be merged
+func CheckIssue(owner, repo string, comments []Comment) bool {
+	config := configure.GlobalConfig.Repos
 	approvalsNeeded := 0
 	approvers := []string{}
 
@@ -81,6 +73,7 @@ func CheckIssue(owner, repo string, comments []Comment, config []configure.Repo)
 		}
 	}
 
+	// if not enough approvals have been made yet
 	if approvalsNeeded > 0 {
 		return false
 	}
@@ -106,17 +99,17 @@ func ParseData(req *http.Request) (Action, error) {
 	return body, nil
 }
 
-func CheckIssueComments(token, owner, repo string, issueNumber int, config []configure.Repo) error {
+func CheckIssueComments(owner, repo string, issueNumber int) error {
 	uri := "/repos/" + repo + "/issues/" + strconv.Itoa(issueNumber) + "/comments"
-	respBody, err := GithubAPICall(token, uri, "GET", nil)
+	respBody, err := GithubAPICall(uri, "GET", nil)
 	if err != nil {
 		return err
 	}
 	var comments []Comment
 	json.Unmarshal(respBody, &comments)
 
-	if CheckIssue(owner, repo, comments, config) {
-		return MergePullRequest(token, owner, repo, issueNumber)
+	if CheckIssue(owner, repo, comments) {
+		return MergePullRequest(owner, repo, issueNumber)
 	}
 	return nil
 }
@@ -127,9 +120,8 @@ func HandleHook(req *http.Request) (int, string) {
 		return 500, "SERVER ERROR: " + err.Error()
 	}
 
-	config := configure.GlobalConfig
 	if body.Action == "created" {
-		err = CheckIssueComments(configure.GlobalEnv["github_token"], body.Repository.Owner.Login, body.Repository.FullName, body.Issue.Number, config)
+		err = CheckIssueComments(body.Repository.Owner.Login, body.Repository.FullName, body.Issue.Number)
 		if err != nil {
 			return 400, err.Error()
 		}

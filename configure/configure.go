@@ -7,8 +7,12 @@ import (
 	"strings"
 )
 
-var GlobalConfig []Repo
-var GlobalEnv map[string]string
+var GlobalConfig UtilConfig
+
+type UtilConfig struct {
+	GithubToken string
+	Repos []Repo
+}
 
 type Repo struct {
 	Name            string
@@ -17,7 +21,7 @@ type Repo struct {
 }
 
 // open the file and read the data into the Repo struct
-func FromJson(rl *[]Repo, filename string) error {
+func FromJson(c *UtilConfig, filename string) error {
 	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Printf("Config file, '%s', not found.\n", filename)
@@ -26,7 +30,7 @@ func FromJson(rl *[]Repo, filename string) error {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	err = decoder.Decode(rl)
+	err = decoder.Decode(c)
 	if err != nil {
 		fmt.Printf("Problems reading your config file\n%s\n", err.Error())
 		return err
@@ -43,24 +47,23 @@ func GetEnvVariables() map[string]string {
 		split := strings.Split(varStr, "=")
 		envVars[split[0]] = split[1]
 	}
-	GlobalEnv = envVars
 	return envVars
 }
 
-// returns an array of Repo structs
-func Configure() []Repo {
+// gathers configuration and sets the module variable "GlobalConfig"
+func Configure() {
 	configFile := GetEnvVariables()["config"]
 	if len(configFile) == 0 {
 		configFile = "config.json"
 	}
 
-	var repos []Repo
-	err := FromJson(&repos, configFile)
+	var c UtilConfig
+	err := FromJson(&c, configFile)
 	if err != nil {
 		fmt.Print(err.Error())
 		os.Exit(1)
 	}
 
-	GlobalConfig = repos
-	return repos
+	// set module var
+	GlobalConfig = c
 }

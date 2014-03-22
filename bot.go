@@ -9,8 +9,7 @@ import (
 
 func main() {
 	// initializations
-	_ = configure.Configure()
-	_ = configure.GetEnvVariables()
+	configure.Configure()
 
 	m := martini.Classic()
 	m.Post("/github_action", github.HandleHook)
