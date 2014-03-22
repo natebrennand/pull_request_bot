@@ -20,6 +20,7 @@ func FromJson(rl *[]Repo, filename string) error {
 		fmt.Printf("Config file, '%s', not found.\n", filename)
 		return err
 	}
+	defer file.Close()
 
 	decoder := json.NewDecoder(file)
 	err = decoder.Decode(rl)
