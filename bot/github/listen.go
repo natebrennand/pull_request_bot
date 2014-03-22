@@ -48,7 +48,7 @@ type User struct {
 	Id    int    `json:"id"`
 }
 
-func (c Comment) RequestApproved (approvers []string) bool {
+func (c Comment) RequestApproved(approvers []string) bool {
 	for _, approver := range approvers {
 		if approver == c.User.Login {
 			for _, keyword := range KEYWORDS {
@@ -61,8 +61,8 @@ func (c Comment) RequestApproved (approvers []string) bool {
 	return false
 }
 
-func CheckIssue (owner, repo string, comments []Comment, config []configure.Repo) bool {
-	approvalsNeeded :=  0
+func CheckIssue(owner, repo string, comments []Comment, config []configure.Repo) bool {
+	approvalsNeeded := 0
 	approvers := []string{}
 
 	for _, relevantRepo := range config {
@@ -71,7 +71,7 @@ func CheckIssue (owner, repo string, comments []Comment, config []configure.Repo
 			approvers = relevantRepo.Approvers
 		}
 	}
-	if approvalsNeeded == 0 {	// repo not in config
+	if approvalsNeeded == 0 { // repo not in config
 		return false
 	}
 
@@ -107,7 +107,7 @@ func ParseData(req *http.Request) (Action, error) {
 }
 
 func CheckIssueComments(token, owner, repo string, issueNumber int, config []configure.Repo) error {
-	uri := "/repos/"+repo+"/issues/"+strconv.Itoa(issueNumber)+"/comments"
+	uri := "/repos/" + repo + "/issues/" + strconv.Itoa(issueNumber) + "/comments"
 	respBody, err := GithubAPICall(token, uri, "GET", nil)
 	if err != nil {
 		return err
