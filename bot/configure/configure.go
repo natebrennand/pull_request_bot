@@ -1,4 +1,4 @@
-package main
+package configure
 
 import (
 	"encoding/json"
@@ -6,6 +6,9 @@ import (
 	"os"
 	"strings"
 )
+
+var GlobalConfig []Repo
+var GlobalEnv map[string]string
 
 type Repo struct {
 	Name            string
@@ -40,6 +43,7 @@ func GetEnvVariables() map[string]string {
 		split := strings.Split(varStr, "=")
 		envVars[split[0]] = split[1]
 	}
+	GlobalEnv = envVars
 	return envVars
 }
 
@@ -57,5 +61,6 @@ func Configure() []Repo {
 		os.Exit(1)
 	}
 
+	GlobalConfig = repos
 	return repos
 }

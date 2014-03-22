@@ -1,15 +1,16 @@
 package main
 
 import (
+	"./configure"
 	"./github"
 
-	"fmt"
 	"github.com/codegangsta/martini"
 )
 
 func main() {
-	config := Configure()
-	fmt.Println(config)
+	// initializations
+	_ = configure.Configure()
+	_ = configure.GetEnvVariables()
 
 	m := martini.Classic()
 	m.Post("/github_action", github.HandleHook)
