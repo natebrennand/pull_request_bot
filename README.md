@@ -8,3 +8,9 @@ Using a set of "approval messages", the bot waits for N approved users to give t
 After N approvals, the bot merges the pull request.
 
 
+#Settings
+
+You will need a GitHub API token in the settings that has permissions to alter repos.
+
+Add all repos that you wish the bot to listen to in the [config file][config.json].
+

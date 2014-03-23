@@ -9,7 +9,7 @@ import (
 
 func main() {
 	// initializations
-	configure.Configure()
+	configure.ReadConfiguration()
 
 	m := martini.Classic()
 	m.Post("/github_action", github.HandleHook)

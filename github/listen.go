@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var KEYWORDS = [2]string{"lgtm", "merge it"}
-
 type Action struct {
 	Repository struct {
 		Name     string `json:"name"`
@@ -41,7 +39,7 @@ type User struct {
 func (c Comment) RequestApproved(approvers []string) bool {
 	for _, approver := range approvers {
 		if approver == c.User.Login {
-			for _, keyword := range KEYWORDS {
+			for _, keyword := range configure.GlobalConfig.MergePhrases {
 				if strings.Contains(c.Body, keyword) {
 					return true
 				}

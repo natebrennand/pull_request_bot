@@ -1,10 +1,14 @@
 { 
-  "GithubToken": "XXXXX",
+  "GithubToken": "XXXXXX",
+  "MergePhrases": [
+    "lgtm",
+    "merge it"
+  ],
   "Repos": [
     {
-      "Name": "natebrennand/hook_testing_repo",
+      "Name": "< OWNER >/< REPO NAME >",
       "Approvers": [
-        "natebrennand"
+        "< USERNAME >"
       ],
       "ApprovalsNeeded": 1
     }
