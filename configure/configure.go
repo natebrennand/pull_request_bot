@@ -11,6 +11,7 @@ var GlobalConfig UtilConfig
 
 type UtilConfig struct {
 	GithubToken  string
+	WebhookURI   string
 	MergePhrases []string
 	Repos        []Repo
 }

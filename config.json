@@ -1,5 +1,6 @@
 { 
   "GithubToken": "XXXXXX",
+  "WebhookURI": "/github_action",
   "MergePhrases": [
     "lgtm",
     "merge it"

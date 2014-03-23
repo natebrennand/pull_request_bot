@@ -20,9 +20,9 @@ type Action struct {
 		Number int    `json:"number"`
 		Title  string `json:"title"`
 	}
-	Sender      User
-	Comment     Comment     `json:"comment"`
-	Action      string      `json:"action"`
+	Sender  User
+	Comment Comment `json:"comment"`
+	Action  string  `json:"action"`
 }
 
 type Comment struct {
@@ -36,6 +36,7 @@ type User struct {
 	Id    int    `json:"id"`
 }
 
+// checks if a comment is approving the pull request
 func (c Comment) RequestApproved(approvers []string) bool {
 	for _, approver := range approvers {
 		if approver == c.User.Login {
@@ -97,6 +98,7 @@ func ParseData(req *http.Request) (Action, error) {
 	return body, nil
 }
 
+// Checks the comments on an issue
 func CheckIssueComments(owner, repo string, issueNumber int) error {
 	uri := "/repos/" + repo + "/issues/" + strconv.Itoa(issueNumber) + "/comments"
 	respBody, err := GithubAPICall(uri, "GET", nil)
@@ -112,6 +114,7 @@ func CheckIssueComments(owner, repo string, issueNumber int) error {
 	return nil
 }
 
+// recieves the webhook from github
 func HandleHook(req *http.Request) (int, string) {
 	body, err := ParseData(req)
 	if err != nil {

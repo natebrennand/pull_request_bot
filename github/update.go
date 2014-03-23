@@ -42,7 +42,7 @@ func GithubAPICall(uri, method string, data []byte) ([]byte, error) {
 
 func MergePullRequest(owner, repo string, requestNumber int) error {
 	uri := ("/repos/" + repo + "/pulls/" + strconv.Itoa(requestNumber) + "/merge")
-	bodyBytes, err := json.Marshal(MergeRequestStruct{"merge bot!"})
+	bodyBytes, err := json.Marshal(MergeRequestStruct{"merge bot merging!"})
 	if err != nil {
 		return err
 	}

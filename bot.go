@@ -12,7 +12,7 @@ func main() {
 	configure.ReadConfiguration()
 
 	m := martini.Classic()
-	m.Post("/github_action", github.HandleHook)
+	m.Post(configure.GlobalConfig.WebhookURI, github.HandleHook)
 
 	m.Run()
 }
