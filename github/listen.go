@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"container/list"
 )
 
 type Action struct {
@@ -37,11 +38,21 @@ type User struct {
 }
 
 // checks if a comment is approving the pull request
-func (c Comment) RequestApproved(approvers []string) bool {
+func (c Comment) RequestApproved(approvers []string, approvals *list.List) bool {
 	for _, approver := range approvers {
+		// check for users already used
+		for a := approvals.Front(); a != nil; a = a.Next() {
+			if a.Value == approver {
+				// nil the approver so it's not matched up
+				approver = ""
+			}
+		}
+
+		// check if user is approved
 		if approver == c.User.Login {
 			for _, keyword := range configure.GlobalConfig.MergePhrases {
 				if strings.Contains(c.Body, keyword) {
+					approvals.PushBack(c.User.Login)
 					return true
 				}
 			}
@@ -55,6 +66,7 @@ func CheckIssue(owner, repo string, comments []Comment) bool {
 	config := configure.GlobalConfig.Repos
 	approvalsNeeded := 0
 	approvers := []string{}
+	madeApproval := list.New()
 
 	for _, relevantRepo := range config {
 		if relevantRepo.Name == repo {
@@ -67,7 +79,7 @@ func CheckIssue(owner, repo string, comments []Comment) bool {
 	}
 
 	for _, comment := range comments {
-		if comment.RequestApproved(approvers) {
+		if comment.RequestApproved(approvers, madeApproval) {
 			approvalsNeeded -= 1
 		}
 	}
