@@ -3,27 +3,31 @@ package github
 import (
 	"../configure"
 
+	"container/list"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
-	"container/list"
 )
 
 type Action struct {
-	Repository struct {
-		Name     string `json:"name"`
-		FullName string `json:"full_name"`
-		Owner    User
-	}
-	Issue struct {
+	Repository Repo `json:"repository"`
+	Issue      struct {
 		Number int    `json:"number"`
 		Title  string `json:"title"`
+		User   User   `json:"user"`
 	}
 	Sender  User
 	Comment Comment `json:"comment"`
 	Action  string  `json:"action"`
+}
+
+type Repo struct {
+	Name     string `json:"name"`
+	FullName string `json:"full_name"`
+	Owner    User
 }
 
 type Comment struct {
@@ -38,10 +42,10 @@ type User struct {
 }
 
 // checks if a comment is approving the pull request
-func (c Comment) RequestApproved(approvers []string, approvals *list.List) bool {
+func (c Comment) RequestApproved(approvers []string, used *list.List) bool {
 	for _, approver := range approvers {
 		// check for users already used
-		for a := approvals.Front(); a != nil; a = a.Next() {
+		for a := used.Front(); a != nil; a = a.Next() {
 			if a.Value == approver {
 				// nil the approver so it's not matched up
 				approver = ""
@@ -52,7 +56,7 @@ func (c Comment) RequestApproved(approvers []string, approvals *list.List) bool 
 		if approver == c.User.Login {
 			for _, keyword := range configure.GlobalConfig.MergePhrases {
 				if strings.Contains(c.Body, keyword) {
-					approvals.PushBack(c.User.Login)
+					used.PushBack(c.User.Login)
 					return true
 				}
 			}
@@ -62,14 +66,15 @@ func (c Comment) RequestApproved(approvers []string, approvals *list.List) bool 
 }
 
 // given a set of comments, determine if the request is ready to be merged
-func CheckIssue(owner, repo string, comments []Comment) bool {
+func (r *Repo) CheckIssue(comments []Comment, sender string) bool {
 	config := configure.GlobalConfig.Repos
 	approvalsNeeded := 0
 	approvers := []string{}
-	madeApproval := list.New()
+	used := list.New()
+	used.PushBack(sender) // block issue creator from approving
 
 	for _, relevantRepo := range config {
-		if relevantRepo.Name == repo {
+		if relevantRepo.Name == r.FullName {
 			approvalsNeeded = relevantRepo.ApprovalsNeeded
 			approvers = relevantRepo.Approvers
 		}
@@ -79,7 +84,7 @@ func CheckIssue(owner, repo string, comments []Comment) bool {
 	}
 
 	for _, comment := range comments {
-		if comment.RequestApproved(approvers, madeApproval) {
+		if comment.RequestApproved(approvers, used) {
 			approvalsNeeded -= 1
 		}
 	}
@@ -89,6 +94,23 @@ func CheckIssue(owner, repo string, comments []Comment) bool {
 		return false
 	}
 	return true
+}
+
+// Checks the comments on an issue
+func (r *Repo) CheckIssueComments(issueNumber int, sender string) error {
+	uri := "/repos/" + r.Owner.Login + "/issues/" + strconv.Itoa(issueNumber) + "/comments"
+	respBody, err := GithubAPICall(uri, "GET", nil)
+	if err != nil {
+		return err
+	}
+	var comments []Comment
+	json.Unmarshal(respBody, &comments)
+
+	if r.CheckIssue(comments, sender) {
+		fmt.Println("We are trying to merge PR the corresponding PR\n")
+		return MergePullRequest(r.Owner.Login, r.FullName, issueNumber)
+	}
+	return nil
 }
 
 // read in request data to a Action struct
@@ -106,24 +128,7 @@ func ParseData(req *http.Request) (Action, error) {
 		return Action{}, err
 	}
 
-	// return new Action struct
-	return body, nil
-}
-
-// Checks the comments on an issue
-func CheckIssueComments(owner, repo string, issueNumber int) error {
-	uri := "/repos/" + repo + "/issues/" + strconv.Itoa(issueNumber) + "/comments"
-	respBody, err := GithubAPICall(uri, "GET", nil)
-	if err != nil {
-		return err
-	}
-	var comments []Comment
-	json.Unmarshal(respBody, &comments)
-
-	if CheckIssue(owner, repo, comments) {
-		return MergePullRequest(owner, repo, issueNumber)
-	}
-	return nil
+	return body, nil // return new Action struct
 }
 
 // recieves the webhook from github
@@ -134,7 +139,8 @@ func HandleHook(req *http.Request) (int, string) {
 	}
 
 	if body.Action == "created" {
-		err = CheckIssueComments(body.Repository.Owner.Login, body.Repository.FullName, body.Issue.Number)
+		fmt.Printf("%s made a comment on issue #%d\n", body.Sender.Login, body.Issue.Number)
+		err = body.Repository.CheckIssueComments(body.Issue.Number, body.Sender.Login)
 		if err != nil {
 			return 400, err.Error()
 		}
